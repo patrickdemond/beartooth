@@ -27,6 +27,36 @@ class qnaire_new extends \cenozo\ui\push\base_new
     parent::__construct( 'qnaire', $args );
   }
 
+  protected function setup()
+  {
+    parent::setup();
+
+    $columns = $this->get_argument( 'columns', array() );
+    $record = $this->get_record();
+
+    $db_first_attempt_event_type = lib::create( 'database\event_type' );
+    $db_first_attempt_event_type->name = sprintf( 'first attempt (%s)', $columns['name'] );
+    $db_first_attempt_event_type->description =
+      sprintf( 'First attempt to contact (for the %s interview).', $columns['name'] );
+    $db_first_attempt_event_type->save();
+
+    $db_reached_event_type = lib::create( 'database\event_type' );
+    $db_reached_event_type->name = sprintf( 'reached (%s)', $columns['name'] );
+    $db_reached_event_type->description =
+      sprintf( 'The participant was first reached (for the %s interview).', $columns['name'] );
+    $db_reached_event_type->save();
+
+    $db_completed_event_type = lib::create( 'database\event_type' );
+    $db_completed_event_type->name = sprintf( 'completed (%s)', $columns['name'] );
+    $db_completed_event_type->description =
+      sprintf( 'Interview completed (for the %s interview).', $columns['name'] );
+    $db_completed_event_type->save();
+
+    $record->first_attempt_event_type_id = $db_first_attempt_event_type->id;
+    $record->reached_event_type_id = $db_reached_event_type->id;
+    $record->completed_event_type_id = $db_completed_event_type->id;
+  }
+
   /**
    * Validate the operation.
    * 
