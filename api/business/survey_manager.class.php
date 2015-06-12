@@ -522,8 +522,20 @@ class survey_manager extends \cenozo\singleton
       $event_list = $db_participant->get_event_list( $event_mod );
       $db_event = 0 < count( $event_list ) ? current( $event_list ) : NULL;
       $value = is_null( $db_event )
-                  ? 'DATE UNKNOWN'
-                  : util::get_formatted_date( $db_event->datetime );
+             ? 'DATE UNKNOWN'
+             : util::get_formatted_date( $db_event->datetime );
+    }
+    else if( 'last completed interview' )
+    {
+      $event_mod = lib::create( 'database\modifier' );
+      $event_mod->where( 'event_type.name', 'like', 'completed %' );
+      $event_mod->order_desc( 'datetime' );
+
+      $event_list = $db_participant->get_event_list( $event_mod );
+      $db_event = 0 < count( $event_list ) ? current( $event_list ) : NULL;
+      $valie = is_null( $db_event )
+             ? 'DATE UNKNOWN'
+             : util::get_formatted_date( $db_event->datetime );
     }
     else if( 'dcs phone_number' == $key )
     {
