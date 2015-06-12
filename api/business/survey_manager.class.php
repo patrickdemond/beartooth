@@ -582,6 +582,12 @@ class survey_manager extends \cenozo\singleton
         }
       }
     }
+    else if( 'proxy.count()' === $key )
+    {
+      $alternate_mod = lib::create( 'database\modifier' );
+      $alternate_mod->where( 'proxy', '=', true );
+      $value = $db_participant->get_alternate_count( $alternate_mod );
+    }
     else if( 'previously completed' == $key )
     {
       $tokens_class_name = lib::get_class_name( 'database\limesurvey\tokens' );
