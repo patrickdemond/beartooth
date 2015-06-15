@@ -96,6 +96,17 @@ class onyx_participants extends \cenozo\ui\push
         else if( preg_match( '/home/i', $participant_data->$method ) ) $interview_type = 'home';
         else $interview_type = false;
 
+        $method = 'Admin.Participant.honorific';
+        if( array_key_exists( $method, $object_vars ) )
+        {
+          $value = $participant_data->$method;
+          if( 0 != strcasecmp( $value, $db_participant->honorific ) )
+          {
+            $db_participant->honorific = $value;
+            $participant_changed = true;
+          }
+        }
+
         $method = 'Admin.Participant.firstName';
         if( array_key_exists( $method, $object_vars ) )
         {
@@ -103,6 +114,17 @@ class onyx_participants extends \cenozo\ui\push
           if( 0 != strcasecmp( $value, $db_participant->first_name ) )
           {
             $db_participant->first_name = $value;
+            $participant_changed = true;
+          }
+        }
+
+        $method = 'Admin.Participant.otherName';
+        if( array_key_exists( $method, $object_vars ) )
+        {
+          $value = $participant_data->$method;
+          if( 0 != strcasecmp( $value, $db_participant->other_name ) )
+          {
+            $db_participant->other_name = $value;
             $participant_changed = true;
           }
         }
