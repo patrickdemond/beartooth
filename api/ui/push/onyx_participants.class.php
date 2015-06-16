@@ -140,6 +140,17 @@ class onyx_participants extends \cenozo\ui\push
           }
         }
 
+        $method = 'Admin.Participant.email';
+        if( array_key_exists( $method, $object_vars ) )
+        {
+          $value = $participant_data->$method;
+          if( 0 != strcasecmp( $value, $db_participant->email ) )
+          {
+            $db_participant->email = $value;
+            $participant_changed = true;
+          }
+        }
+
         $method = 'Admin.Participant.consentToDrawBlood';
         if( array_key_exists( $method, $object_vars ) )
         {
