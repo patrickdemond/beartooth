@@ -109,7 +109,7 @@ class appointment_list extends \cenozo\ui\pull\base_list
         'uid'        => $db_participant->uid,
         'honorific' => $db_participant->honorific,
         'first_name' => $db_participant->first_name,
-        'other_name' => $db_participant->other_name,
+        'other_name' => is_null( $db_participant->other_name ) ? '' : $db_participant->other_name,
         'last_name'  => $db_participant->last_name,
         'dob'        => $dob,
         'gender'    => $db_participant->gender,
