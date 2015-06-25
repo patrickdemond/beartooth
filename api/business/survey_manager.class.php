@@ -525,7 +525,7 @@ class survey_manager extends \cenozo\singleton
              ? 'DATE UNKNOWN'
              : util::get_formatted_date( $db_event->datetime );
     }
-    else if( 'last completed interview' )
+    else if( 'last completed interview' == $key )
     {
       $event_mod = lib::create( 'database\modifier' );
       $event_mod->where( 'event_type.name', 'like', 'completed %' );
@@ -533,7 +533,7 @@ class survey_manager extends \cenozo\singleton
 
       $event_list = $db_participant->get_event_list( $event_mod );
       $db_event = 0 < count( $event_list ) ? current( $event_list ) : NULL;
-      $valie = is_null( $db_event )
+      $value = is_null( $db_event )
              ? 'DATE UNKNOWN'
              : util::get_formatted_date( $db_event->datetime );
     }
@@ -568,7 +568,7 @@ class survey_manager extends \cenozo\singleton
 
       if( 'number of alternate contacts' == $key )
       {
-        $value = count( $alterante_list );
+        $value = count( $alternate_list );
       }
       else if(
         preg_match( '/alternate([0-9]+) (first_name|last_name|phone)/', $key, $matches ) )
@@ -576,7 +576,7 @@ class survey_manager extends \cenozo\singleton
         $alt_number = intval( $matches[1] );
         $aspect = $matches[2];
 
-        if( count( $alterante_list ) < $alt_number )
+        if( count( $alternate_list ) < $alt_number )
         {
           $value = '';
         }
@@ -584,17 +584,23 @@ class survey_manager extends \cenozo\singleton
         {
           if( 'phone' == $aspect )
           {
-            $phone_list = $alterante_list[$alt_number - 1]->get_phone_list();
+            $phone_list = $alternate_list[$alt_number - 1]->get_phone_list();
             $value = is_array( $phone_list ) ? $phone_list[0]->number : '';
           }
           else
           {
-            $value = $alterante_list[$alt_number - 1]->$aspect;
+            $value = $alternate_list[$alt_number - 1]->$aspect;
           }
         }
       }
     }
-    else if( 'proxy.count()' === $key )
+    else if( 'informant.count()' == $key )
+    {
+      $alternate_mod = lib::create( 'database\modifier' );
+      $alternate_mod->where( 'informant', '=', true );
+      $value = $db_participant->get_alternate_count( $alternate_mod );
+    }
+    else if( 'proxy.count()' == $key )
     {
       $alternate_mod = lib::create( 'database\modifier' );
       $alternate_mod->where( 'proxy', '=', true );
