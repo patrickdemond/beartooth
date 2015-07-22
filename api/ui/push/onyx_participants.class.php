@@ -165,6 +165,20 @@ class onyx_participants extends \cenozo\ui\push
           }
         }
 
+        $method = 'Admin.Participant.consentToTakeUrine';
+        if( array_key_exists( $method, $object_vars ) )
+        {
+          $value = $participant_data->$method;
+          if( is_string( $value ) ) $value = preg_match( '/y|yes|true|1/i', $value ) ? 1 : 0;
+          else $value = $value ? 1 : 0;
+          if( is_null( $db_data_collection->take_urine ) ||
+              $value != $db_data_collection->take_urine )
+          {
+            $db_data_collection->take_urine = $value;
+            $data_collection_changed = true;
+          }
+        }
+
         $method = 'Admin.Participant.gender';
         if( array_key_exists( $method, $object_vars ) )
         {

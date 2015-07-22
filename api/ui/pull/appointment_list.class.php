@@ -147,9 +147,19 @@ class appointment_list extends \cenozo\ui\pull\base_list
         if( !is_null( $db_data_collection ) )
         {
           $db_data_collection = $db_participant->get_data_collection();
-          $data['consent_to_draw_blood'] = is_null( $db_data_collection )
-                                         ? NULL
-                                         : $db_data_collection->draw_blood;
+          if( is_null( $db_data_collection ) )
+          {
+            $blood = true;
+            $urine = true;
+          }
+          else
+          {
+            $blood = is_null( $db_data_collection->draw_blood ) || $db_data_collection->draw_blood;
+            $urine = is_null( $db_data_collection->take_urine ) || $db_data_collection->take_urine;
+          }
+
+          $data['consentToDrawBlood'] = $blood ? 'YES' : 'NO';
+          $data['consentToTakeUrine'] = $urine ? 'YES' : 'NO';
         }
       }
 

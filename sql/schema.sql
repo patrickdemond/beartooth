@@ -507,6 +507,7 @@ CREATE TABLE IF NOT EXISTS `beartooth`.`data_collection` (
   `create_timestamp` TIMESTAMP NULL,
   `participant_id` INT UNSIGNED NOT NULL,
   `draw_blood` TINYINT(1) NULL DEFAULT NULL,
+  `take_urine` TINYINT(1) NULL DEFAULT NULL,
   `draw_blood_continue` TINYINT(1) NULL DEFAULT NULL,
   `physical_tests_continue` TINYINT(1) NULL DEFAULT NULL,
   `informant_continue` TINYINT(1) NULL DEFAULT NULL,

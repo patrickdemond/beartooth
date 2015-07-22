@@ -9,6 +9,7 @@ SOURCE operation2.sql
 SOURCE queue_state.sql
 SOURCE setting_value.sql
 SOURCE setting.sql
+SOURCE data_collection.sql
 SOURCE update_version_number.sql
 
 COMMIT;
