@@ -28,6 +28,7 @@ class participant_view extends \cenozo\ui\widget\participant_view
     $this->add_item( 'qnaire_quota', 'constant', 'Questionnaire Quota State' );
     $this->add_item( 'qnaire_name', 'constant', 'Current Questionnaire' );
     $this->add_item( 'qnaire_date', 'constant', 'Delay Questionnaire Until' );
+    $this->add_item( 'data_collection_take_urine', 'boolean', 'Consent To Take Urine' );
     $this->add_item( 'data_collection_draw_blood', 'boolean', 'Consent To Draw Blood' );
     $this->add_item( 'data_collection_draw_blood_continue', 'boolean', 'Draw Blood (Continue)' );
     $this->add_item( 'data_collection_physical_tests_continue', 'boolean', 'Physical Tests (Continue)' );
@@ -94,6 +95,9 @@ class participant_view extends \cenozo\ui\widget\participant_view
       is_null( $enabled ) ? '(not applicable)' : ( $enabled ? 'Enabled' : 'Disabled' ) );
     $this->set_item( 'qnaire_name', $qnaire_name );
     $this->set_item( 'qnaire_date', $qnaire_date );
+    $this->set_item(
+      'data_collection_take_urine',
+      is_null( $db_data_collection ) ? NULL : $db_data_collection->take_urine );
     $this->set_item(
       'data_collection_draw_blood',
       is_null( $db_data_collection ) ? NULL : $db_data_collection->draw_blood );
