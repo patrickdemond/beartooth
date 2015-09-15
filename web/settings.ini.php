@@ -30,6 +30,10 @@ $SETTINGS['url']['MASTODON'] = NULL;
 $SETTINGS['path']['LIMESURVEY'] = '/var/www/limesurvey';
 $SETTINGS['url']['LIMESURVEY'] = '../limesurvey';
 
+// the survey IDs of auxilary scripts
+$SETTINGS['general']['secondary_survey'] = NULL;
+$SETTINGS['general']['proxy_survey'] = NULL;
+
 // voip settings
 $SETTINGS['voip']['enabled'] = false;
 $SETTINGS['voip']['url'] = 'http://localhost:8088/mxml';

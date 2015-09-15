@@ -1,6 +1,6 @@
 <?php
 /**
- * participant_withdraw.class.php
+ * participant_proxy.class.php
  * 
  * @author Patrick Emond <emondpd@mcmaster.ca>
  * @filesource
@@ -10,9 +10,9 @@ namespace beartooth\ui\widget;
 use cenozo\lib, cenozo\log, beartooth\util;
 
 /**
- * widget participant withdraw
+ * widget participant proxy
  */
-class participant_withdraw extends \cenozo\ui\widget
+class participant_proxy extends \cenozo\ui\widget
 {
   /**
    * Constructor
@@ -24,7 +24,7 @@ class participant_withdraw extends \cenozo\ui\widget
    */
   public function __construct( $args )
   {
-    parent::__construct( 'participant', 'withdraw', $args );
+    parent::__construct( 'participant', 'proxy', $args );
   }
 
   /**
@@ -38,7 +38,7 @@ class participant_withdraw extends \cenozo\ui\widget
   {
     parent::prepare();
 
-    $this->set_heading( 'Participant Withdraw' );
+    $this->set_heading( 'Participant Proxy' );
   }
 
   /**
@@ -57,7 +57,6 @@ class participant_withdraw extends \cenozo\ui\widget
     // fill out the participant's details
     $db_participant = lib::create( 'database\participant', $this->get_argument( 'id' ) );
     $db_language = $db_participant->get_language();
-    $db_last_consent = $db_participant->get_last_consent();
     
     $previous_call_list = array();
     $db_last_assignment = $db_participant->get_last_finished_assignment();
@@ -92,7 +91,6 @@ class participant_withdraw extends \cenozo\ui\widget
     $this->set_variable( 'participant_note_count', $db_participant->get_note_count() );
     $this->set_variable( 'participant_name', $db_participant->get_full_name() );
     $this->set_variable( 'participant_uid', $db_participant->uid );
-
     $this->set_variable( 'participant_language',
       is_null( $db_language ) ? 'none' : $db_language->name );
     
@@ -107,7 +105,7 @@ class participant_withdraw extends \cenozo\ui\widget
     $this->set_variable( 'allow_call', $session->get_allow_call() );
     $this->set_variable( 'sip_enabled', $voip_manager->get_sip_enabled() );
     $this->set_variable( 'on_call', !is_null( $voip_manager->get_call() ) );
-    $this->set_variable( 'withdraw_complete',
+    $this->set_variable( 'proxy_complete',
       false === lib::create( 'business\survey_manager' )->get_survey_url() );
   }
 }
