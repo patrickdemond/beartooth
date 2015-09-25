@@ -166,7 +166,8 @@ class sample_report extends \cenozo\ui\pull\base_report
         'SELECT interview_id, COUNT(*) AS total '.
         'FROM assignment '.
         'JOIN interview ON assignment.interview_id = interview.id '.
-        'AND interview.qnaire_id = 2 '.
+        'JOIN qnaire ON interview.qnaire_id = qnaire.id '.
+        'WHERE qnaire.rank = 2 '.
         'GROUP BY interview_id '.
       ') AS site_assignment_count '.
       'ON site_interview.id = site_assignment_count.interview_id '.
