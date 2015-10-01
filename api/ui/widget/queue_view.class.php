@@ -193,7 +193,7 @@ class queue_view extends \cenozo\ui\widget\base_view
    */
   public function determine_participant_count( $modifier = NULL )
   {
-    $database_class_name = lib::get_class_name( 'database\database' );
+    $db = lib::create( 'business\session' )->get_database();
 
     if( is_null( $modifier ) ) $modifier = lib::create( 'database\modifier' );
     if( !is_null( $this->db_qnaire ) ) $modifier->where( 'qnaire_id', '=', $this->db_qnaire->id );
@@ -206,7 +206,7 @@ class queue_view extends \cenozo\ui\widget\base_view
       // if the language isn't set, assume it is the service's default language
       $column = sprintf(
         'IFNULL( participant.language_id, %s )',
-        $database_class_name::format_string(
+        $db->format_string(
           lib::create( 'business\session' )->get_service()->language_id ) );
       $modifier->where( $column, '=', $this->db_language->id );
     }
@@ -224,7 +224,7 @@ class queue_view extends \cenozo\ui\widget\base_view
    */
   public function determine_participant_list( $modifier = NULL )
   {
-    $database_class_name = lib::get_class_name( 'database\database' );
+    $db = lib::create( 'business\session' )->get_database();
 
     if( is_null( $modifier ) ) $modifier = lib::create( 'database\modifier' );
     if( !is_null( $this->db_qnaire ) ) $modifier->where( 'qnaire_id', '=', $this->db_qnaire->id );
@@ -237,7 +237,7 @@ class queue_view extends \cenozo\ui\widget\base_view
       // if the language isn't set, assume it is the service's default language
       $column = sprintf(
         'IFNULL( participant.language_id, %s )',
-        $database_class_name::format_string(
+        $db->format_string(
           lib::create( 'business\session' )->get_service()->language_id ) );
       $modifier->where( $column, '=', $this->db_language->id );
     }
