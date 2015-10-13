@@ -36,14 +36,17 @@ class appointment_report extends \cenozo\ui\pull\base_report
    */
   protected function build()
   {
-    $db = lib::create( 'business\session' )->get_database();
+    $session = lib::create( 'business\session' );
+    $db = $session->get_database();
     $queue_class_name = lib::get_class_name( 'database\queue' );
     $appointment_class_name = lib::get_class_name( 'database\appointment' );
 
     $user_id = $this->get_argument( 'user_id' );
     $db_user = $user_id ? lib::create( 'database\user', $user_id ) : NULL;
-    $db_site = lib::create( 'business\session' )->get_site();
-    $db_service = lib::create( 'business\session' )->get_service();
+    $restrict_site_id = $this->get_argument( 'restrict_site_id', 0 );
+    $db_site = $restrict_site_id ? lib::create( 'database\site', $restrict_site_id ) : NULL;
+    $timezone = is_null( $db_site ) ? $session->get_site()->timezone : $db_site->timezone;
+    $db_service = $session->get_service();
     $db_qnaire = lib::create( 'database\qnaire', $this->get_argument( 'restrict_qnaire_id' ) );
     $db_prev_qnaire = $db_qnaire->get_prev_qnaire();
     $db_qnaire_queue = $queue_class_name::get_unique_record( 'name', 'qnaire' );
@@ -52,11 +55,9 @@ class appointment_report extends \cenozo\ui\pull\base_report
     $restrict_end_date = $this->get_argument( 'restrict_end_date' );
     $completed = $this->get_argument( 'completed' );
 
-    $list_for = 'site' == $db_qnaire->type
-              ? $db_site->name
-              : ( is_null( $db_user )
-                ? $db_site->name
-                : sprintf( '%s %s', $db_user->first_name, $db_user->last_name ) );
+    $list_for = 'site' == $db_qnaire->type || is_null( $db_user )
+              ? ( is_null( $db_site ) ? 'all sites' : $db_site->name )
+              : sprintf( '%s %s', $db_user->first_name, $db_user->last_name );
     $this->set_heading( sprintf(
       '%s appointment list for %s',
       $db_qnaire->name,
@@ -64,8 +65,9 @@ class appointment_report extends \cenozo\ui\pull\base_report
 
     $modifier = lib::create( 'database\modifier' );
     $modifier->group( 'appointment.id' );
+    if( is_null( $db_site ) ) $modifier->order( 'site.name' );
     $modifier->order( 'appointment.datetime' );
-    $modifier->where( 'participant_site.site_id', '=', $db_site->id );
+    if( !is_null( $db_site ) ) $modifier->where( 'participant_site.site_id', '=', $db_site->id );
 
     if( 'home' == $db_qnaire->type && !is_null( $db_user ) )
       $modifier->where( 'appointment.user_id', '=', $db_user->id );
@@ -84,28 +86,22 @@ class appointment_report extends \cenozo\ui\pull\base_report
       $end_datetime_obj = clone $temp_datetime_obj;
     }
 
-    if( $restrict_start_date )
-      $modifier->where(
-        sprintf( 'CONVERT_TZ( appointment.datetime, "UTC", %s )',
-                 $db->format_string( $db_site->timezone ) ),
-        '>=',
-        $start_datetime_obj->format( 'Y-m-d' ).' 0:00:00' );
-    if( $restrict_end_date )
-      $modifier->where(
-        sprintf( 'CONVERT_TZ( appointment.datetime, "UTC", %s )',
-                 $db->format_string( $db_site->timezone ) ),
-        '<=',
-        $end_datetime_obj->format( 'Y-m-d' ).' 23:59:59' );
+    if( $restrict_start_date || $restrict_end_date )
+    {
+      $column = sprintf( 'CONVERT_TZ( appointment.datetime, "UTC", %s )', $db->format_string( $timezone ) );
+      if( $restrict_start_date )
+        $modifier->where( $column, '>=', $start_datetime_obj->format( 'Y-m-d' ).' 0:00:00' );
+      if( $restrict_end_date )
+        $modifier->where( $column, '<=', $end_datetime_obj->format( 'Y-m-d' ).' 23:59:59' );
+    }
 
-    if( is_null( $completed ) )
+    if( 0 == strlen( $completed ) )
     {
       $modifier->where_bracket( true );
       // the participant has completed all interviews
       $modifier->where( 'queue_has_participant.queue_id', '=', $db_finished_queue->id );
-      $modifier->where_bracket( true, true );
       // or, the participant is in the qnaire queue
-      $modifier->where( 'queue_has_participant.queue_id', '=', $db_qnaire_queue->id );
-      $modifier->where_bracket( false );
+      $modifier->or_where( 'queue_has_participant.queue_id', '=', $db_qnaire_queue->id );
       $modifier->where_bracket( false );
     }
     else
@@ -130,15 +126,16 @@ class appointment_report extends \cenozo\ui\pull\base_report
       }
     }
 
-    $timezone = lib::create( 'business\session' )->get_site()->timezone;
     $sql = sprintf(
-      'SELECT CONCAT( participant.first_name, " ", participant.last_name ) AS Name, '.
+      'SELECT '.
+      ( is_null( $db_site ) ? 'site.name As Site, ' : '' ).
+      'CONCAT( participant.first_name, " ", participant.last_name ) AS Name, '.
       'participant.uid AS UID, '.
       'DATE_FORMAT( CONVERT_TZ( appointment.datetime, "UTC", %s ), "%%W, %%M %%D" ) AS Date, '.
       'DATE_FORMAT( CONVERT_TZ( appointment.datetime, "UTC", %s ), "%%l:%%i %%p" ) AS Time, '.
       'YEAR( FROM_DAYS( DATEDIFF( NOW(), date_of_birth ) ) ) AS Age, ',
-      $db->format_string( $db_site->timezone ),
-      $db->format_string( $db_site->timezone ) );
+      $db->format_string( $timezone ),
+      $db->format_string( $timezone ) );
 
     // add extra columns needed by home/site reports
     if( 'home' == $db_qnaire->type )
@@ -146,10 +143,10 @@ class appointment_report extends \cenozo\ui\pull\base_report
       $sql .= 
         'CONCAT_WS( '.
           '", ", '.
-          'IF( address2 IS NULL, address1, CONCAT( address1, " ", address2 ) ), '.
-          'city, '.
+          'IF( address.address2 IS NULL, address.address1, CONCAT( address.address1, " ", address.address2 ) ), '.
+          'address.city, '.
           'abbreviation, '.
-          'postcode '.
+          'address.postcode '.
         ') AS Address, ';
       if( is_null( $db_user ) )
       {
@@ -189,6 +186,7 @@ class appointment_report extends \cenozo\ui\pull\base_report
         'JOIN participant_site '.
         'ON participant.id = participant_site.participant_id '.
         'AND participant_site.service_id = %s '.
+        ( is_null( $db_site ) ? 'JOIN site ON participant_site.site_id = site.id ' : '' ).
         'LEFT JOIN phone '.
         'ON participant.person_id = phone.person_id '.
         'AND phone.active = true ',

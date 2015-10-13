@@ -39,6 +39,7 @@ class appointment_report extends base_report
     parent::prepare();
 
     $this->add_restriction( 'qnaire' );
+    $this->add_restriction( 'site' );
     $this->add_restriction( 'dates' );
 
     if( 'interviewer' == lib::create( 'business\session' )->get_role()->name )
@@ -70,6 +71,7 @@ class appointment_report extends base_report
   {
     parent::setup();
 
+    $user_class_name = lib::create( 'database\user' );
     $role_class_name = lib::create( 'database\role' );
     $session = lib::create( 'business\session' );
 
@@ -80,10 +82,13 @@ class appointment_report extends base_report
     else
     {
       $db_role = $role_class_name::get_unique_record( 'name', 'interviewer' );
-      $db_site = $session->get_site();
       $user_mod = lib::create( 'database\modifier' );
       $user_mod->where( 'access.role_id', '=', $db_role->id );
-      foreach( $db_site->get_user_list( $user_mod ) as $db_user )
+      $user_mod->order( 'user.name' );
+      $db_user_list = $session->get_role()->all_sites
+                    ? $user_class_name::select( $user_mod )
+                    : $session->get_site()->get_user_list( $user_mod );
+      foreach( $db_user_list as $db_user )
         $user_list[$db_user->id] =
           sprintf( '%s %s (%s)', $db_user->first_name, $db_user->last_name, $db_user->name );
 
