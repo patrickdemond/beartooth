@@ -37,6 +37,7 @@ class interview_report extends \cenozo\ui\pull\base_report
   protected function build()
   {
     $site_class_name = lib::create( 'database\site' );
+    $qnaire_class_name = lib::create( 'database\qnaire' );
     $event_class_name = lib::create( 'database\event' );
 
     $restrict_site_id = $this->get_argument( 'restrict_site_id', 0 );
@@ -50,6 +51,16 @@ class interview_report extends \cenozo\ui\pull\base_report
     $now_datetime_obj = util::get_datetime_object();
     $start_datetime_obj = NULL;
     $end_datetime_obj = NULL;
+
+    $home_qnaire_mod = lib::create( 'database\modifier' );
+    $home_qnaire_mod->where( 'type', '=', 'home' );
+    $db_home_qnaire = current( $qnaire_class_name::select( $home_qnaire_mod ) );
+    $completed_home_event_type_id = $db_home_qnaire->completed_event_type_id;
+
+    $site_qnaire_mod = lib::create( 'database\modifier' );
+    $site_qnaire_mod->where( 'type', '=', 'site' );
+    $db_site_qnaire = current( $qnaire_class_name::select( $site_qnaire_mod ) );
+    $completed_site_event_type_id = $db_site_qnaire->completed_event_type_id;
 
     // validate the dates
     if( $restrict_start_date )
@@ -81,8 +92,8 @@ class interview_report extends \cenozo\ui\pull\base_report
       $event_mod = lib::create( 'database\modifier' );
       $event_mod->order( 'datetime' );
       $event_mod->limit( 1 );
-      $event_mod->where( 'event_type.name', 'IN',
-        array( 'completed (Baseline Home)', 'completed (Baseline Site)' ) );
+      $event_mod->where( 'event_type_id', 'IN',
+        array( $completed_home_event_type_id, $completed_site_event_type_id ) );
       $event_list = $event_class_name->select( $event_mod );
       $db_event = current( $event_list );
       $start_datetime_obj = util::get_datetime_object( $db_event->datetime );
@@ -121,7 +132,7 @@ class interview_report extends \cenozo\ui\pull\base_report
         $home_event_mod->where( 'participant_site.site_id', '=', $db_site->id );
         $home_event_mod->where( 'datetime', '>=', $from_datetime_obj->format( 'Y-m-d' ) );
         $home_event_mod->where( 'datetime', '<', $to_datetime_obj->format( 'Y-m-d' ) );
-        $home_event_mod->where( 'event_type.name', '=', 'completed (Baseline Home)' );
+        $home_event_mod->where( 'event_type_id', '=', $completed_home_event_type_id );
         $home_content[] = $event_class_name::count( $home_event_mod );
 
         $site_event_mod = lib::create( 'database\modifier' );
@@ -129,7 +140,7 @@ class interview_report extends \cenozo\ui\pull\base_report
         $site_event_mod->where( 'participant_site.site_id', '=', $db_site->id );
         $site_event_mod->where( 'datetime', '>=', $from_datetime_obj->format( 'Y-m-d' ) );
         $site_event_mod->where( 'datetime', '<', $to_datetime_obj->format( 'Y-m-d' ) );
-        $site_event_mod->where( 'event_type.name', '=', 'completed (Baseline Site)' );
+        $home_event_mod->where( 'event_type_id', '=', $completed_site_event_type_id );
         $site_content[] = $event_class_name::count( $site_event_mod );
       }
 
