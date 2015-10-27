@@ -55,6 +55,8 @@ class appointment_add extends base_appointment_view
       $this->add_item( 'user_id', 'enum', 'Interviewer' );
       $this->add_item( 'address_id', 'enum', 'Address' );
     }
+    $this->add_item( 'appointment_type_id', 'enum', 'Special Type',
+      'Leave blank if this is a regular appointment.' );
     $this->add_item( 'datetime', 'datetime', 'Date' );
   }
 
@@ -79,6 +81,7 @@ class appointment_add extends base_appointment_view
     // create enum arrays
     $role_class_name = lib::get_class_name( 'database\role' );
     $user_class_name = lib::get_class_name( 'database\user' );
+    $qnaire_class_name = lib::get_class_name( 'database\qnaire' );
 
     $db_site = $db_participant->get_effective_site();
     $db_role = $role_class_name::get_unique_record( 'name', 'interviewer' );
@@ -112,6 +115,19 @@ class appointment_add extends base_appointment_view
       $this->set_item( 'address_id', key( $address_list ), true, $address_list, true );
     }
 
+    // we need to get the appointment type list from the qnaire, so since Beartooth 1 is deprecated
+    // we'll cheat by finding the first home or site qnaire and using its list
+    $qnaire_mod = lib::create( 'database\modifier' );
+    $qnaire_mod->where( 'type', '=', $this->select_address ? 'home' : 'site' );
+    $qnaire_mod->order( 'rank' );
+    $qnaire_list = $qnaire_class_name::select( $qnaire_mod );
+    $db_qnaire = current( $qnaire_list );
+
+    $appointment_types = array();
+    foreach( $db_qnaire->get_appointment_type_list() as $db_appointment_type )
+      $appointment_types[$db_appointment_type->id] = $db_appointment_type->name;
+
+
     // create the min datetime array
     $start_qnaire_date = $db_participant->get_start_qnaire_date();
     $datetime_limits = !is_null( $start_qnaire_date )
@@ -120,6 +136,7 @@ class appointment_add extends base_appointment_view
 
     // set the view's items
     $this->set_item( 'participant_id', $db_participant->id );
+    $this->set_item( 'appointment_type_id', NULL, false, $appointment_types );
     $this->set_item( 'datetime', '', true, $datetime_limits );
     
     $db_effective_qnaire = $db_participant->get_effective_qnaire();

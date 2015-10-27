@@ -54,6 +54,11 @@ class qnaire_view extends \cenozo\ui\widget\base_view
     $this->phase_list = lib::create( 'ui\widget\phase_list', $this->arguments );
     $this->phase_list->set_parent( $this );
     $this->phase_list->set_heading( 'Questionnaire phases' );
+
+    // create the appointment_type sub-list widget
+    $this->appointment_type_list = lib::create( 'ui\widget\appointment_type_list', $this->arguments );
+    $this->appointment_type_list->set_parent( $this );
+    $this->appointment_type_list->set_heading( 'Questionnaire\'s special appointment types' );
   }
 
   /**
@@ -104,6 +109,14 @@ class qnaire_view extends \cenozo\ui\widget\base_view
       $this->set_variable( 'phase_list', $this->phase_list->get_variables() );
     }
     catch( \cenozo\exception\permission $e ) {}
+    
+    // process the child widgets
+    try
+    {
+      $this->appointment_type_list->process();
+      $this->set_variable( 'appointment_type_list', $this->appointment_type_list->get_variables() );
+    }
+    catch( \cenozo\exception\permission $e ) {}
   }
   
   /**
@@ -112,4 +125,11 @@ class qnaire_view extends \cenozo\ui\widget\base_view
    * @access protected
    */
   protected $phase_list = NULL;
+  
+  /**
+   * The qnaire list widget.
+   * @var appointment_type_list
+   * @access protected
+   */
+  protected $appointment_type_list = NULL;
 }

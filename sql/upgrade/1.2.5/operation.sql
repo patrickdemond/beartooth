@@ -39,3 +39,35 @@ VALUES( "push", "queue", "edit", true,
 INSERT IGNORE INTO operation( type, subject, name, restricted, description )
 VALUES( "widget", "participant", "proxy", true,
 "Pseudo-assignment to handle participant proxyies." );
+
+INSERT IGNORE INTO operation( type, subject, name, restricted, description )
+VALUES( "widget", "appointment_type", "add", true,
+"View a form for creating a new appointment type." );
+
+INSERT IGNORE INTO operation( type, subject, name, restricted, description )
+VALUES( "push", "appointment_type", "delete", true,
+"Removes a appointment type from the system." );
+
+INSERT IGNORE INTO operation( type, subject, name, restricted, description )
+VALUES( "push", "appointment_type", "edit", true,
+"Edits a appointment type's details." );
+
+INSERT IGNORE INTO operation( type, subject, name, restricted, description )
+VALUES( "widget", "appointment_type", "list", true,
+"Lists a questionnaire's appointment types." );
+
+INSERT IGNORE INTO operation( type, subject, name, restricted, description )
+VALUES( "push", "appointment_type", "new", true,
+"Creates a new questionnaire appointment type." );
+
+INSERT IGNORE INTO operation( type, subject, name, restricted, description )
+VALUES( "widget", "appointment_type", "view", true,
+"View the details of a questionnaire's appointment types." );
+
+INSERT IGNORE INTO operation( type, subject, name, restricted, description )
+VALUES( "widget", "qnaire", "add_appointment_type", true,
+"View surveys to add as a new appointment_type to a questionnaire." );
+
+INSERT IGNORE INTO operation( type, subject, name, restricted, description )
+VALUES( "push", "qnaire", "delete_appointment_type", true,
+"Remove appointment_types from a questionnaire." );

@@ -23,6 +23,20 @@ VALUES( "widget", "appointment", "report", true, "Set up an appointment report."
 INSERT INTO operation( type, subject, name, restricted, description )
 VALUES( "widget", "appointment", "view", true, "View the details of a participant's particular appointment." );
 
+-- appointment_type
+INSERT INTO operation( type, subject, name, restricted, description )
+VALUES( "widget", "appointment_type", "add", true, "View a form for creating a new appointment type." );
+INSERT INTO operation( type, subject, name, restricted, description )
+VALUES( "push", "appointment_type", "delete", true, "Removes a appointment type from the system." );
+INSERT INTO operation( type, subject, name, restricted, description )
+VALUES( "push", "appointment_type", "edit", true, "Edits a appointment type's details." );
+INSERT INTO operation( type, subject, name, restricted, description )
+VALUES( "widget", "appointment_type", "list", true, "Lists a questionnaire's appointment types." );
+INSERT INTO operation( type, subject, name, restricted, description )
+VALUES( "push", "appointment_type", "new", true, "Creates a new questionnaire appointment type." );
+INSERT INTO operation( type, subject, name, restricted, description )
+VALUES( "widget", "appointment_type", "view", true, "View the details of a questionnaire's appointment types." );
+
 -- assignment
 INSERT INTO operation( type, subject, name, restricted, description )
 VALUES( "push", "assignment", "begin", true, "Begins a new assignment with a particular participant." );
@@ -161,9 +175,13 @@ VALUES( "widget", "progress", "report", true, "Set up a progress report." );
 INSERT INTO operation( type, subject, name, restricted, description )
 VALUES( "widget", "qnaire", "add", true, "View a form for creating a new questionnaire." );
 INSERT INTO operation( type, subject, name, restricted, description )
+VALUES( "widget", "qnaire", "add_appointment_type", true, "View surveys to add as a new appointment_type to a questionnaire." );
+INSERT INTO operation( type, subject, name, restricted, description )
 VALUES( "widget", "qnaire", "add_phase", true, "View surveys to add as a new phase to a questionnaire." );
 INSERT INTO operation( type, subject, name, restricted, description )
 VALUES( "push", "qnaire", "delete", true, "Removes a questionnaire from the system." );
+INSERT INTO operation( type, subject, name, restricted, description )
+VALUES( "push", "qnaire", "delete_appointment_type", true, "Remove appointment_types from a questionnaire." );
 INSERT INTO operation( type, subject, name, restricted, description )
 VALUES( "push", "qnaire", "delete_phase", true, "Remove phases from a questionnaire." );
 INSERT INTO operation( type, subject, name, restricted, description )

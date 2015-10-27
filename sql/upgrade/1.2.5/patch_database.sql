@@ -10,6 +10,8 @@ SOURCE queue_state.sql
 SOURCE setting_value.sql
 SOURCE setting.sql
 SOURCE data_collection.sql
+SOURCE appointment_type.sql
+SOURCE appointment.sql
 SOURCE update_version_number.sql
 
 COMMIT;

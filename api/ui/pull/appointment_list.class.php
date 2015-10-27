@@ -60,6 +60,7 @@ class appointment_list extends \cenozo\ui\pull\base_list
 
     $onyx_instance_class_name = lib::get_class_name( 'database\onyx_instance' );
     $appointment_class_name = lib::get_class_name( 'database\appointment' );
+    $appointment_type_class_name = lib::get_class_name( 'database\appointment_type' );
     $interview_class_name = lib::get_class_name( 'database\interview' );
     $qnaire_class_name = lib::get_class_name( 'database\qnaire' );
     $queue_class_name = lib::get_class_name( 'database\queue' );
@@ -89,6 +90,48 @@ class appointment_list extends \cenozo\ui\pull\base_list
     // restrict to participants in the "appointment" queue
     $db_queue = $queue_class_name::get_unique_record( 'name', 'appointment' );
     $modifier->where( 'appointment.participant_id', 'IN', $db_queue->get_participant_idlist() );
+
+    // restrict special appointment types
+    $appointment_type = $this->get_argument( 'type', false );
+    if( !$appointment_type )
+    { // assume we only want non-special appointments
+      $modifier->where( 'appointment.appointment_type_id', '=', NULL );
+    }
+    else
+    {
+      // comma-deliminated string
+      $default = false;
+      $appointment_type_id_list = array();
+      foreach( explode( ',', $appointment_type ) as $type )
+      {
+        $type = trim( $type );
+        $db_appointment_type = $appointment_type_class_name::get_unique_record( 'name', $type );
+        if( 'default' == $type )
+        {
+          $default = true;
+        }
+        else
+        {
+          if( is_null( $db_appointment_type ) )
+            log::warning( sprintf(
+              'Tried to restrict appointment list by invalid appointment type "%s"',
+              $type ) );
+          else $appointment_type_id_list[] = $db_appointment_type->id;
+        }
+      }
+
+      if( $default && 0 < count( $appointment_type_id_list ) )
+      {
+        $modifier->where_bracket( true );
+        $modifier->where( 'appointment.appointment_type_id', '=', NULL );
+        $modifier->or_where( 'appointment.appointment_type_id', 'IN', $appointment_type_id_list );
+        $modifier->where_bracket( false );
+      }
+      else if( $default )
+        $modifier->where( 'appointment.appointment_type_id', '=', NULL );
+      else if( 0 < count( $appointment_type_id_list ) )
+        $modifier->where( 'appointment.appointment_type_id', 'IN', $appointment_type_id_list );
+    }
 
     $appointment_list = $appointment_class_name::select( $modifier );
     if( is_null( $appointment_list ) )
