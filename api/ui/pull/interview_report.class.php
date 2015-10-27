@@ -36,6 +36,7 @@ class interview_report extends \cenozo\ui\pull\base_report
    */
   protected function build()
   {
+  \cenozo\database\database::$debug = true;
     $site_class_name = lib::create( 'database\site' );
     $qnaire_class_name = lib::create( 'database\qnaire' );
     $event_class_name = lib::create( 'database\event' );
@@ -140,7 +141,7 @@ class interview_report extends \cenozo\ui\pull\base_report
         $site_event_mod->where( 'participant_site.site_id', '=', $db_site->id );
         $site_event_mod->where( 'datetime', '>=', $from_datetime_obj->format( 'Y-m-d' ) );
         $site_event_mod->where( 'datetime', '<', $to_datetime_obj->format( 'Y-m-d' ) );
-        $home_event_mod->where( 'event_type_id', '=', $completed_site_event_type_id );
+        $site_event_mod->where( 'event_type_id', '=', $completed_site_event_type_id );
         $site_content[] = $event_class_name::count( $site_event_mod );
       }
 
