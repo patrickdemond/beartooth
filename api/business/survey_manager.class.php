@@ -575,12 +575,12 @@ class survey_manager extends \cenozo\singleton
         }
       }
     }
-    else if( 'interviewer first_name' == $key )
+    else if( 'interviewer first_name' == $key || 'user first_name' == $key )
     {
       $db_user = lib::create( 'business\session' )->get_user();
       $value = $db_user->first_name;
     }
-    else if( 'interviewer last_name' == $key )
+    else if( 'interviewer last_name' == $key || 'user last_name' == $key )
     {
       $db_user = lib::create( 'business\session' )->get_user();
       $value = $db_user->last_name;
