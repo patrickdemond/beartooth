@@ -391,7 +391,7 @@ class survey_manager extends \cenozo\singleton
 
       // fill in the attributes
       foreach( $db_surveys->get_token_attribute_names() as $key => $value )
-        $db_tokens->$key = static::get_attribute( $db_participant, NULL, $value );
+        $db_tokens->$key = static::get_attribute( $db_participant, $value );
 
       $db_tokens->save();
 
