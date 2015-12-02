@@ -85,6 +85,13 @@ class appointment_add extends base_appointment_view
 
     $db_site = $db_participant->get_effective_site();
     $db_role = $role_class_name::get_unique_record( 'name', 'interviewer' );
+
+    if( is_null( $db_site ) )
+      throw lib::create( 'exception\notice',
+        'Please make sure the participant has an active site before adding an appointment. '.
+        'Reload your browser to return to the previous view.',
+        __METHOD__ );
+
     $user_mod = lib::create( 'database\modifier' );
     $user_mod->where( 'access.site_id', '=', $db_site->id );
     $user_mod->where( 'access.role_id', '=', $db_role->id );
