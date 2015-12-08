@@ -201,27 +201,5 @@ class self_assignment extends \cenozo\ui\widget
       $this->set_variable( 'phone_note', is_null( $note ) ? false : $note );
     }
     else $this->set_variable( 'phone_note', false );
-
-    $allow_secondary = false;
-    $phone_mod = lib::create( 'database\modifier' );
-    $phone_mod->where( 'active', '=', true );
-    if( 0 == $db_participant->get_phone_count( $phone_mod ) )
-    {
-      $allow_secondary = true;
-    }
-    else
-    {
-      $max_failed_calls =
-        lib::create( 'business\setting_manager' )->get_setting( 'calling', 'max failed calls' );
-      if( $max_failed_calls <= $db_interview->get_failed_call_count() )
-      {
-        $db_operation =
-          $operation_class_name::get_operation( 'widget', 'participant', 'secondary' );
-        if( lib::create( 'business\session' )->is_allowed( $db_operation ) )
-          $allow_secondary = true;
-      }
-    }
-
-    $this->set_variable( 'allow_secondary', $allow_secondary );
   }
 }

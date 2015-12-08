@@ -37,11 +37,7 @@ class survey_manager extends \cenozo\singleton
 
     // determine the participant
     $db_participant = NULL;
-    if( array_key_exists( 'secondary_id', $_COOKIE ) )
-    {
-      $db_participant = lib::create( 'database\participant', $_COOKIE['secondary_participant_id'] );
-    }
-    else if( array_key_exists( 'withdrawing_participant', $_COOKIE ) )
+    if( array_key_exists( 'withdrawing_participant', $_COOKIE ) )
     {
       $db_participant = lib::create( 'database\participant', $_COOKIE['withdrawing_participant'] );
     }
@@ -131,52 +127,7 @@ class survey_manager extends \cenozo\singleton
     $survey_class_name = lib::get_class_name( 'database\limesurvey\survey' );
     $session = lib::create( 'business\session' );
 
-    if( array_key_exists( 'secondary_id', $_COOKIE ) )
-    {
-      // get the participant being sourced
-      $db_participant = lib::create( 'database\participant', $_COOKIE['secondary_participant_id'] );
-      if( is_null( $db_participant ) )
-      {
-        log::warning( 'Tried to determine survey information for an invalid participant.' );
-        return false;
-      }
-
-      $setting_manager = lib::create( 'business\setting_manager' );
-      $sid = $setting_manager->get_setting( 'general', 'secondary_survey' );
-      $token = $_COOKIE['secondary_id'];
-
-      $tokens_class_name::set_sid( $sid );
-      $survey_class_name::set_sid( $sid );
-
-      // reset the script and token
-      $tokens_mod = lib::create( 'database\modifier' );
-      $tokens_mod->where( 'token', '=', $token );
-      foreach( $tokens_class_name::select( $tokens_mod ) as $db_tokens ) $db_tokens->delete();
-      $scripts_mod = lib::create( 'database\modifier' );
-      $scripts_mod->where( 'token', '=', $token );
-      foreach( $survey_class_name::select( $scripts_mod ) as $db_survey ) $db_survey->delete();
-
-      $db_tokens = lib::create( 'database\limesurvey\tokens' );
-      $db_tokens->token = $token;
-      $db_tokens->firstname = $db_participant->honorific.' '.$db_participant->first_name;
-      $db_tokens->lastname = $db_participant->last_name;
-      $db_tokens->email = $db_participant->email;
-
-      if( 0 < strlen( $db_participant->other_name ) )
-        $db_tokens->firstname .= sprintf( ' (%s)', $db_participant->other_name );
-
-      // fill in the attributes
-      $db_surveys = lib::create( 'database\limesurvey\surveys', $sid );
-      foreach( $db_surveys->get_token_attribute_names() as $key => $value )
-        $db_tokens->$key = static::get_attribute( $db_participant, $value );
-
-      $db_tokens->save();
-
-      // the secondary survey can be brought back up after it is complete, so always set these
-      $this->current_sid = $sid;
-      $this->current_token = $token;
-    }
-    else if( array_key_exists( 'withdrawing_participant', $_COOKIE ) )
+    if( array_key_exists( 'withdrawing_participant', $_COOKIE ) )
     {
       // get the participant being withdrawn
       $db_participant = lib::create( 'database\participant', $_COOKIE['withdrawing_participant'] );
