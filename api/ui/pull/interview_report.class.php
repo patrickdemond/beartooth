@@ -36,7 +36,6 @@ class interview_report extends \cenozo\ui\pull\base_report
    */
   protected function build()
   {
-  \cenozo\database\database::$debug = true;
     $site_class_name = lib::create( 'database\site' );
     $qnaire_class_name = lib::create( 'database\qnaire' );
     $event_class_name = lib::create( 'database\event' );
