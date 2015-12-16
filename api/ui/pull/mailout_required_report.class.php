@@ -104,6 +104,7 @@ class mailout_required_report extends \cenozo\ui\pull\base_report
       array( 'qnaire_id', 'rank' ),
       array( $db_qnaire->id, 1 ) );
     $survey_class_name::set_sid( $db_phase->sid );
+    $tokens_class_name::set_sid( $db_phase->sid );
 
     foreach( $participant_class_name::select( $participant_mod ) as $db_participant )
     {
@@ -114,7 +115,8 @@ class mailout_required_report extends \cenozo\ui\pull\base_report
 
       // figure out the token and from that get this participant's surveys
       $survey_mod = lib::create( 'database\modifier' );
-      $survey_mod->where( 'token', 'LIKE', $db_interview->id.'_%' );
+
+      $tokens_class_name::where_token( $survey_mod, $db_participant, $db_phase->repeated );
       $survey_mod->order_desc( 'startdate' );
 
       // go through each survey response and check to see if the question code has been set

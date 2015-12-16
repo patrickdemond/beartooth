@@ -51,18 +51,12 @@ class interview extends \cenozo\database\has_note
     $survey_timings_class_name = lib::get_class_name( 'database\limesurvey\survey_timings' );
     
     $survey_class_name::set_sid( $db_phase->sid );
+    $tokens_class_name::set_sid( $db_phase->sid );
+
     $survey_mod = lib::create( 'database\modifier' );
-    $survey_mod->where( 'token', '=',
-      $tokens_class_name::determine_token_string( $this, $db_assignment ) );
+    $tokens_class_name::where_token( $survey_mod, $this->get_participant(), $db_phase->repeated );
     $survey_list = $survey_class_name::select( $survey_mod );
-
     if( 0 == count( $survey_list ) ) return 0.0;
-
-    if( 1 < count( $survey_list ) ) log::alert( sprintf(
-      'There are %d surveys using the same token (%s)! for SID %d',
-      count( $survey_list ),
-      $token,
-      $db_phase->sid ) );
 
     $db_survey = current( $survey_list );
 

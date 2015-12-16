@@ -14,4 +14,6 @@ SOURCE appointment_type.sql
 SOURCE appointment.sql
 SOURCE update_version_number.sql
 
+SELECT "NOTE: Make sure to run limesurvey.php" AS "";
+
 COMMIT;

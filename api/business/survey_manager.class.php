@@ -122,9 +122,7 @@ class survey_manager extends \cenozo\singleton
     $this->current_sid = false;
     $this->current_token = false;
 
-    $qnaire_class_name = lib::get_class_name( 'database\qnaire' );
     $tokens_class_name = lib::get_class_name( 'database\limesurvey\tokens' );
-    $survey_class_name = lib::get_class_name( 'database\limesurvey\survey' );
     $session = lib::create( 'business\session' );
 
     if( array_key_exists( 'withdrawing_participant', $_COOKIE ) )
@@ -185,18 +183,15 @@ class survey_manager extends \cenozo\singleton
           {
             // let the tokens record class know which SID we are dealing with
             $tokens_class_name::set_sid( $db_phase->sid );
-
-            $token = $tokens_class_name::determine_token_string(
-                       $db_interview,
-                       $db_phase->repeated ? $db_assignment : NULL );
             $tokens_mod = lib::create( 'database\modifier' );
-            $tokens_mod->where( 'token', '=', $token );
+            $tokens_class_name::where_token( $tokens_mod, $this->get_participant(), $db_phase->repeated );
             $db_tokens = current( $tokens_class_name::select( $tokens_mod ) );
 
             if( false === $db_tokens )
             { // token not found, create it
               $db_tokens = lib::create( 'database\limesurvey\tokens' );
-              $db_tokens->token = $token;
+              $db_tokens->token =
+                $tokens_class_name::determine_token_string( $db_participant, $db_phase->repeated );
               $db_tokens->firstname = $db_participant->honorific.' '.$db_participant->first_name;
               $db_tokens->lastname = $db_participant->last_name;
               $db_tokens->email = $db_participant->email;
@@ -209,21 +204,16 @@ class survey_manager extends \cenozo\singleton
               foreach( $db_surveys->get_token_attribute_names() as $key => $value )
                 $db_tokens->$key = static::get_attribute( $db_participant, $value );
 
-              // TODO: this is temporary code to fix the TOKEN != "NO" problem in limesurvey
-              //       for survey 63834
-              if( 63834 == $db_phase->sid && is_null( $db_tokens->attribute_9 ) )
-                $db_tokens->attribute_9 = "UNKNOWN";
-
               $db_tokens->save();
 
               $this->current_sid = $db_phase->sid;
-              $this->current_token = $token;
+              $this->current_token = $db_tokens->token;
               break;
             }
             else if( 'N' == $db_tokens->completed )
             { // we have found the current phase
               $this->current_sid = $db_phase->sid;
-              $this->current_token = $token;
+              $this->current_token = $db_tokens->token;
               break;
             }
             // else do not set the current_sid or current_token
@@ -258,15 +248,14 @@ class survey_manager extends \cenozo\singleton
 
     // get the withdraw token
     $tokens_class_name::set_sid( $withdraw_sid );
-    $token = $db_participant->uid;
     $tokens_mod = lib::create( 'database\modifier' );
-    $tokens_mod->where( 'token', '=', $token );
+    $tokens_class_name::where_token( $tokens_mod, $db_participant, false );
     $db_tokens = current( $tokens_class_name::select( $tokens_mod ) );
 
     if( false === $db_tokens )
     { // token not found, create it
       $db_tokens = lib::create( 'database\limesurvey\tokens' );
-      $db_tokens->token = $token;
+      $db_tokens->token = $tokens_class_name::determine_token_string( $db_participant, false );
       $db_tokens->firstname = $db_participant->honorific.' '.$db_participant->first_name;
       $db_tokens->lastname = $db_participant->last_name;
       $db_tokens->email = $db_participant->email;
@@ -281,12 +270,12 @@ class survey_manager extends \cenozo\singleton
       $db_tokens->save();
 
       $this->current_sid = $withdraw_sid;
-      $this->current_token = $token;
+      $this->current_token = $db_tokens->token;
     }
     else if( 'N' == $db_tokens->completed )
     {
       $this->current_sid = $withdraw_sid;
-      $this->current_token = $token;
+      $this->current_token = $db_tokens->token;
     }
     else // token is complete, store the survey results
     {
@@ -304,12 +293,10 @@ class survey_manager extends \cenozo\singleton
   {
     $tokens_class_name = lib::get_class_name( 'database\limesurvey\tokens' );
 
-    $proxy_manager = lib::create( 'business\proxy_manager' );
-
     // let the tokens record class know which SID we are dealing with by checking if
     // there is a source-specific survey for the participant, and if not falling back
     // on the default proxy survey
-    $proxy_sid = $proxy_manager->get_proxy_sid( $db_participant );
+    $proxy_sid = $setting_manager->get_setting( 'general', 'proxy_survey' );
     if( is_null( $proxy_sid ) )
       throw lib::create( 'exception\runtime',
         sprintf( 'Trying to proxy participant %s without a proxy survey.',
@@ -322,7 +309,7 @@ class survey_manager extends \cenozo\singleton
     // only generate a new token if there isn't already one in cookies
     $token = array_key_exists( 'proxying_token', $_COOKIE )
            ? $_COOKIE['proxying_token']
-           : $proxy_manager->generate_token( $db_participant );
+           : $tokens_class_name::determine_token_string( $db_participant, true );
     setcookie( 'proxying_token', $token, 0, COOKIE_PATH );
 
     $tokens_mod = lib::create( 'database\modifier' );
@@ -380,15 +367,6 @@ class survey_manager extends \cenozo\singleton
     {
       $value = $db_participant->uid;
     }
-    else if( 'override quota' == $key )
-    {
-      // override_quota is true if the participant's quota is disabled AND override_quota is true
-      $override_quota = '0';
-      $value = false === $db_participant->get_quota_enabled() &&
-               ( $db_participant->override_quota || $db_participant->get_source()->override_quota )
-             ? '1'
-             : '0';
-    }
     else if( false !== strpos( $key, 'address' ) )
     {
       $db_address = $db_participant->get_primary_address();
@@ -437,11 +415,6 @@ class survey_manager extends \cenozo\singleton
       if( is_null( $db_hin ) ) $value = -1;
       else $value = 1 == $db_hin->access ? 1 : 0;
     }
-    else if( 'HIN recorded' == $key )
-    {
-      $db_hin = $db_participant->get_hin();
-      $value = !is_null( $db_participant->get_hin()->code );
-    }
     else if( 'provided data' == $key )
     {
       $event_type_class_name = lib::get_class_name( 'database\event_type' );
@@ -485,47 +458,6 @@ class survey_manager extends \cenozo\singleton
         }
       }
     }
-    else if( 'INCL_2e' == $key )
-    {
-      // TODO: This is a custom token attribute which refers to a specific question in the
-      // introduction survey.  This code is not generic and needs to eventually be made
-      // generic.
-      $survey_class_name = lib::get_class_name( 'database\limesurvey\survey' );
-
-      $db_interview = lib::create( 'business\session')->get_current_assignment()->get_interview();
-      $phase_mod = lib::create( 'database\modifier' );
-      $phase_mod->where( 'rank', '=', 1 );
-      $phase_list = $db_interview->get_qnaire()->get_phase_list( $phase_mod );
-
-      // determine the SID of the first phase of the questionnaire (where the question is asked)
-      if( 1 == count( $phase_list ) )
-      {
-        $db_phase = current( $phase_list );
-        $survey_class_name::set_sid( $db_phase->sid );
-
-        $survey_mod = lib::create( 'database\modifier' );
-        $survey_mod->where( 'token', 'LIKE', $db_interview->id.'_%' );
-        $survey_mod->order_desc( 'datestamp' );
-        $survey_list = $survey_class_name::select( $survey_mod );
-
-        $found = false;
-        foreach( $survey_list as $db_survey )
-        { // loop through all surveys until an answer is found
-          try
-          {
-            $value = $db_survey->get_response( $key );
-            // match any NON NULL response
-            if( !is_null( $value ) ) $found = true;
-          }
-          catch( \cenozo\exception\runtime $e )
-          {
-            // ignore the error and continue without setting the attribute
-          }
-
-          if( $found ) break;
-        }
-      }
-    }
     else if( 'interviewer first_name' == $key || 'user first_name' == $key )
     {
       $db_user = lib::create( 'business\session' )->get_user();
@@ -535,11 +467,6 @@ class survey_manager extends \cenozo\singleton
     {
       $db_user = lib::create( 'business\session' )->get_user();
       $value = $db_user->last_name;
-    }
-    else if( 'participant_source' == $key )
-    {
-      $db_source = $db_participant->get_source();
-      $value = is_null( $db_source ) ? '(none)' : $db_source->name;
     }
     else if( 'last interview date' == $key )
     {
@@ -567,63 +494,6 @@ class survey_manager extends \cenozo\singleton
              ? 'DATE UNKNOWN'
              : util::get_formatted_date( $db_event->datetime );
     }
-    else if( 'dcs phone_number' == $key )
-    {
-      $db_site = lib::create( 'business\session' )->get_site();
-      $value = $db_site->phone_number;
-    }
-    else if( 'dcs address street' == $key )
-    {
-      $db_site = lib::create( 'business\session' )->get_site();
-      $value = $db_site->address1.( is_null( $db_site->address2 ) ? '' : ', '.$db_site->address2 );
-    }
-    else if( 'dcs address city' == $key )
-    {
-      $db_site = lib::create( 'business\session' )->get_site();
-      $value = $db_site->city;
-    }
-    else if( 'dcs address province' == $key )
-    {
-      $db_site = lib::create( 'business\session' )->get_site();
-      $value = $db_site->get_region()->name;
-    }
-    else if( 'dcs address postal code' == $key )
-    {
-      $db_site = lib::create( 'business\session' )->get_site();
-      $value = $db_site->postcode;
-    }
-    else if( false !== strpos( $key, 'alternate' ) )
-    {
-      $alternate_list = $db_participant->get_alternate_list();
-
-      if( 'number of alternate contacts' == $key )
-      {
-        $value = count( $alternate_list );
-      }
-      else if(
-        preg_match( '/alternate([0-9]+) (first_name|last_name|phone)/', $key, $matches ) )
-      {
-        $alt_number = intval( $matches[1] );
-        $aspect = $matches[2];
-
-        if( count( $alternate_list ) < $alt_number )
-        {
-          $value = '';
-        }
-        else
-        {
-          if( 'phone' == $aspect )
-          {
-            $phone_list = $alternate_list[$alt_number - 1]->get_phone_list();
-            $value = is_array( $phone_list ) ? $phone_list[0]->number : '';
-          }
-          else
-          {
-            $value = $alternate_list[$alt_number - 1]->$aspect;
-          }
-        }
-      }
-    }
     else if( 'informant.count()' == $key )
     {
       $alternate_mod = lib::create( 'database\modifier' );
@@ -635,17 +505,6 @@ class survey_manager extends \cenozo\singleton
       $alternate_mod = lib::create( 'database\modifier' );
       $alternate_mod->where( 'proxy', '=', true );
       $value = $db_participant->get_alternate_count( $alternate_mod );
-    }
-    else if( 'previously completed' == $key )
-    {
-      $tokens_class_name = lib::get_class_name( 'database\limesurvey\tokens' );
-      $interview_id = lib::create( 'business\session')->get_current_assignment()->interview_id;
-
-      // no need to set the token sid since it should already be set before calling this method
-      $tokens_mod = lib::create( 'database\modifier' );
-      $tokens_mod->where( 'token', 'like', $interview_id.'_%' );
-      $tokens_mod->where( 'completed', '!=', 'N' );
-      $value = $tokens_class_name::count( $tokens_mod );
     }
 
     return $value;
