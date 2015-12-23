@@ -266,7 +266,7 @@ class patch
           'JOIN temp ON tokens.token = temp.token '.
           'JOIN %s.interview ON temp.interview_id = interview.id '.
           'JOIN %s.participant ON interview.participant_id = participant.id '.
-          'SET tokens.token = CONCAT( participant.uid, "_", temp.counter )',
+          'SET tokens.token = CONCAT( participant.uid, ".", temp.counter )',
           $limesurvey_database_name,
           $row['sid'],
           $beartooth_database_name,
@@ -286,7 +286,7 @@ class patch
           'JOIN temp ON tokens.token = temp.token '.
           'JOIN %s.interview ON temp.interview_id = interview.id '.
           'JOIN %s.participant ON interview.participant_id = participant.id '.
-          'SET tokens.token = CONCAT( participant.uid, "_", temp.counter )',
+          'SET tokens.token = CONCAT( participant.uid, ".", temp.counter )',
           $limesurvey_database_name,
           $row['sid'],
           $beartooth_database_name,
