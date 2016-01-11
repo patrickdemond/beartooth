@@ -291,6 +291,7 @@ class survey_manager extends \cenozo\singleton
    */
   private function process_proxy( $db_participant )
   {
+    $setting_manager = lib::create( 'business\setting_manager' );
     $tokens_class_name = lib::get_class_name( 'database\limesurvey\tokens' );
 
     // let the tokens record class know which SID we are dealing with by checking if
