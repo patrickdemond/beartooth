@@ -103,8 +103,10 @@ class mailout_required_report extends \cenozo\ui\pull\base_report
     $db_phase = $phase_class_name::get_unique_record(
       array( 'qnaire_id', 'rank' ),
       array( $db_qnaire->id, 1 ) );
-    $survey_class_name::set_sid( $db_phase->sid );
+    $old_tokens_sid = $tokens_class_name::get_sid();
     $tokens_class_name::set_sid( $db_phase->sid );
+    $old_survey_sid = $survey_class_name::get_sid();
+    $survey_class_name::set_sid( $db_phase->sid );
 
     foreach( $participant_class_name::select( $participant_mod ) as $db_participant )
     {
@@ -155,6 +157,9 @@ class mailout_required_report extends \cenozo\ui\pull\base_report
           $answer_date );
         }
     }// end participant loop
+
+    $survey_class_name::set_sid( $old_survey_sid );
+    $tokens_class_name::set_sid( $old_tokens_sid );
 
     $header = array(
       "Language",

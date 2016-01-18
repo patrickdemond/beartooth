@@ -182,6 +182,7 @@ class survey_manager extends \cenozo\singleton
           foreach( $phase_list as $db_phase )
           {
             // let the tokens record class know which SID we are dealing with
+            $old_sid = $tokens_class_name::get_sid();
             $tokens_class_name::set_sid( $db_phase->sid );
             $tokens_mod = lib::create( 'database\modifier' );
             $tokens_class_name::where_token( $tokens_mod, $db_participant, $db_phase->repeated );
@@ -217,6 +218,8 @@ class survey_manager extends \cenozo\singleton
               break;
             }
             // else do not set the current_sid or current_token
+
+            $tokens_class_name::set_sid( $old_sid );
           }
         }
 
@@ -247,6 +250,7 @@ class survey_manager extends \cenozo\singleton
     $db_surveys = lib::create( 'database\limesurvey\surveys', $withdraw_sid );
 
     // get the withdraw token
+    $old_sid = $tokens_class_name::get_sid();
     $tokens_class_name::set_sid( $withdraw_sid );
     $tokens_mod = lib::create( 'database\modifier' );
     $tokens_class_name::where_token( $tokens_mod, $db_participant, false );
@@ -281,6 +285,8 @@ class survey_manager extends \cenozo\singleton
     {
       $withdraw_manager->process( $db_participant );
     }
+            
+    $tokens_class_name::set_sid( $old_sid );
   }
 
   /**
@@ -305,6 +311,7 @@ class survey_manager extends \cenozo\singleton
         __METHOD__ );
     $db_surveys = lib::create( 'database\limesurvey\surveys', $proxy_sid );
 
+    $old_sid = $tokens_class_name::get_sid();
     $tokens_class_name::set_sid( $proxy_sid );
     
     // only generate a new token if there isn't already one in cookies
@@ -343,6 +350,8 @@ class survey_manager extends \cenozo\singleton
       $this->current_token = $token;
     }
     // else do not set the current_sid or current_token members!
+
+    $tokens_class_name::set_sid( $old_sid );
   }
 
   /**

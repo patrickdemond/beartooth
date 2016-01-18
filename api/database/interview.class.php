@@ -46,12 +46,16 @@ class interview extends \cenozo\database\has_note
       return 0.0;
     }
 
-    $survey_class_name = lib::get_class_name( 'database\limesurvey\survey' );
     $tokens_class_name = lib::get_class_name( 'database\limesurvey\tokens' );
+    $survey_class_name = lib::get_class_name( 'database\limesurvey\survey' );
     $survey_timings_class_name = lib::get_class_name( 'database\limesurvey\survey_timings' );
     
-    $survey_class_name::set_sid( $db_phase->sid );
+    $old_tokens_sid = $tokens_class_name::get_sid();
     $tokens_class_name::set_sid( $db_phase->sid );
+    $old_survey_sid = $survey_class_name::get_sid();
+    $survey_class_name::set_sid( $db_phase->sid );
+    $old_timings_sid = $timings_class_name::get_sid();
+    $survey_timings_class_name::set_sid( $db_phase->sid );
 
     $survey_mod = lib::create( 'database\modifier' );
     $tokens_class_name::where_token( $survey_mod, $this->get_participant(), $db_phase->repeated );
@@ -60,11 +64,16 @@ class interview extends \cenozo\database\has_note
 
     $db_survey = current( $survey_list );
 
-    $survey_timings_class_name::set_sid( $db_phase->sid );
     $timing_mod = lib::create( 'database\modifier' );
     $timing_mod->where( 'id', '=', $db_survey->id );
     $db_timings = current( $survey_timings_class_name::select( $timing_mod ) );
-    return $db_timings ? (float) $db_timings->interviewtime : 0.0;
+    $time = $db_timings ? (float) $db_timings->interviewtime : 0.0;
+
+    $tokens_class_name::set_sid( $old_tokens_sid );
+    $survey_class_name::set_sid( $old_survey_sid );
+    $timings_class_name::set_sid( $old_timings_sid );
+
+    return $time;
   }
 
   /**

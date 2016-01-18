@@ -84,17 +84,23 @@ class withdraw_manager extends \cenozo\singleton
       $tokens_class_name = lib::get_class_name( 'database\limesurvey\tokens' );
       $survey_class_name = lib::get_class_name( 'database\limesurvey\survey' );
 
-      // delete the script
+      $old_tokens_sid = $tokens_class_name::get_sid();
       $tokens_class_name::set_sid( $withdraw_sid );
+      $old_survey_sid = $survey_class_name::get_sid();
+      $survey_class_name::set_sid( $withdraw_sid );
+
+      // delete the script
       $tokens_mod = lib::create( 'database\modifier' );
       $tokens_class_name::where_token( $tokens_mod, $db_participant, false );
       foreach( $tokens_class_name::select( $tokens_mod ) as $db_tokens ) $db_tokens->delete();
 
       // delete the token
-      $survey_class_name::set_sid( $withdraw_sid );
       $survey_mod = lib::create( 'database\modifier' );
       $tokens_class_name::where_token( $survey_mod, $db_participant, false );
       foreach( $survey_class_name::select( $survey_mod ) as $db_survey ) $db_survey->delete();
+
+      $tokens_class_name::set_sid( $old_tokens_sid );
+      $survey_class_name::set_sid( $old_survey_sid );
     }   
 
     $db_participant->withdraw_letter = NULL;
@@ -118,8 +124,10 @@ class withdraw_manager extends \cenozo\singleton
     $db_surveys = lib::create( 'database\limesurvey\surveys', $withdraw_sid );
 
     // set the SID for the the survey and tokens records
-    $survey_class_name::set_sid( $withdraw_sid );
+    $old_tokens_sid = $tokens_class_name::get_sid();
     $tokens_class_name::set_sid( $withdraw_sid );
+    $old_survey_sid = $survey_class_name::get_sid();
+    $survey_class_name::set_sid( $withdraw_sid );
 
     // get the withdraw token
     $token = $db_participant->uid;
@@ -214,6 +222,9 @@ class withdraw_manager extends \cenozo\singleton
     // now write the letter type for future reference
     $db_participant->withdraw_letter = $letter_type;
     $db_participant->save();
+
+    $tokens_class_name::set_sid( $old_tokens_sid );
+    $survey_class_name::set_sid( $old_survey_sid );
   }
 
   /**
