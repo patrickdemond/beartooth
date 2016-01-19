@@ -516,6 +516,39 @@ class survey_manager extends \cenozo\singleton
       $alternate_mod->where( 'proxy', '=', true );
       $value = $db_participant->get_alternate_count( $alternate_mod );
     }
+    else if( false !== strpos( $key, 'alternate' ) )
+    {
+      $alternate_list = $db_participant->get_alternate_list();
+
+      $matches = array(); // for pregs below
+      if( 'number of alternate contacts' == $key )
+      {
+        $value = count( $alternate_list );
+      }
+      else if(
+        preg_match( '/alternate([0-9]+) (first_name|last_name|phone)/', $key, $matches ) )
+      {
+        $alt_number = intval( $matches[1] );
+        $aspect = $matches[2];
+
+        if( count( $alternate_list ) < $alt_number )
+        {
+          $value = '';
+        }
+        else
+        {
+          if( 'phone' == $aspect )
+          {
+            $phone_list = $alternate_list[$alt_number - 1]->get_phone_list();
+            $value = is_array( $phone_list ) ? $phone_list[0]->number : '';
+          }
+          else
+          {
+            $value = $alternate_list[$alt_number - 1]->$aspect;
+          }
+        }
+      }
+    }
 
     return $value;
   }
