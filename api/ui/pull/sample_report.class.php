@@ -55,7 +55,8 @@ class sample_report extends \cenozo\ui\pull\base_report
       'SELECT participant.uid AS UID, '.
              'site.name AS Site, '.
              'IF( participant.active, "yes", "no" ) AS Active, '.
-             'low_education AS LowEd, '.
+             'IF( low_education, "yes", "no" ) AS LowEd, '.
+             'IFNULL( IF( draw_blood, "yes", "no" ), "unknown" ) AS Blood, '.
              'IFNULL( state.name, "none" ) AS State, '.
              'IFNULL( DATE( CONVERT_TZ( import_event.datetime, "UTC", %s ) ), "unknown" ) AS Imported, '.
              'DATE( CONVERT_TZ( service_has_participant.datetime, "UTC", %s ) ) AS Released, '.
@@ -101,6 +102,8 @@ class sample_report extends \cenozo\ui\pull\base_report
       'JOIN service_has_participant '.
       'ON participant.id = service_has_participant.participant_id '.
       'AND service_has_participant.service_id = %s '.
+      // get the participant's blood status
+      'LEFT JOIN data_collection ON participant.id = data_collection.participant_id '.
       // get the participant's state (if they have one)
       'LEFT JOIN state '.
       'ON participant.state_id = state.id '.
