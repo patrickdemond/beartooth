@@ -67,11 +67,14 @@ class site_appointment_feed extends \cenozo\ui\pull\base_feed
         $setting_manager->get_setting( 'appointment', 'site duration' ) ) );
 
       $db_participant = $db_appointment->get_participant();
+      $db_appointment_type = $db_appointment->get_appointment_type();
+
       $this->data[] = array(
         'id'      => $db_appointment->id,
         'title'   => is_null( $db_participant->uid ) || 0 == strlen( $db_participant->uid ) ?
                       $db_participant->first_name.' '.$db_participant->last_name :
                       $db_participant->uid,
+        'color'    => is_null( $db_appointment_type ) ? NULL : 'green',
         'allDay'  => false,
         'start'   => $start_datetime_obj->format( \DateTime::ISO8601 ),
         'end'     => $end_datetime_obj->format( \DateTime::ISO8601 ) );

@@ -76,14 +76,17 @@ class home_appointment_feed extends \cenozo\ui\pull\base_feed
         $setting_manager->get_setting( 'appointment', 'home duration' ) ) );
 
       $db_participant = $db_appointment->get_participant();
+      $db_appointment_type = $db_appointment->get_appointment_type();
       $title = 'coordinator' == $db_role->name
              ? sprintf( '%s (%s)',
                         $db_appointment->get_user()->name,
                         $db_appointment->get_participant()->uid )
              : $db_appointment->get_participant()->uid;
+
       $this->data[] = array(
         'id'      => $db_appointment->id,
         'title'   => $title,
+        'color'   => is_null( $db_appointment_type ) ? NULL : 'green',
         'allDay'  => false,
         'start'   => $start_datetime_obj->format( \DateTime::ISO8601 ),
         'end'     => $end_datetime_obj->format( \DateTime::ISO8601 ) );
