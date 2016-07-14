@@ -71,3 +71,7 @@ VALUES( "widget", "qnaire", "add_appointment_type", true,
 INSERT IGNORE INTO operation( type, subject, name, restricted, description )
 VALUES( "push", "qnaire", "delete_appointment_type", true,
 "Remove appointment_types from a questionnaire." );
+
+INSERT IGNORE INTO operation( type, subject, name, restricted, description )
+VALUES( "push", "onyx", "hin", true,
+"Allows Onyx to update the hin details of one or more participants." );
