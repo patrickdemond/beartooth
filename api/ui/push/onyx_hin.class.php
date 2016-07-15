@@ -118,7 +118,7 @@ class onyx_hin extends \cenozo\ui\push
           'entry' => $entry,
           'noid' => $noid );
         if( array_key_exists( 'pdfForm', $object_vars ) )
-          $args['form'] = $proxy_data->pdfForm;
+          $args['form'] = $hin_data->pdfForm;
         $mastodon_manager->push( 'hin_form', 'new', $args );
 
         // update the hin
